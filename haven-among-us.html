@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Haven Security — Imposter</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#08021a;--card:#1a0a2e;--a1:#ffd93d;--a2:#4d96ff;--a3:#ff6b6b;--a4:#6bcb77;--txt:#fff;--mut:#8892b0;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px;color:var(--txt);background-image:radial-gradient(circle at 20% 20%,#1a0a3e22,transparent 60%);}
+h1{font-family:'Fredoka One',cursive;font-size:1.6rem;color:var(--a1);text-align:center;}
+.screen{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.card{background:var(--card);border-radius:18px;border:2px solid #5a2d9020;padding:16px;width:100%;}
+.btn{border:none;border-radius:12px;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:12px;cursor:pointer;width:100%;transition:opacity .2s;}
+.btn:active{opacity:0.8;}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#4d96ff);color:#fff;}
+.btn-danger{background:linear-gradient(135deg,#dc2626,#ff6b6b);color:#fff;}
+.btn-green{background:linear-gradient(135deg,#16a34a,#6bcb77);color:#fff;}
+.btn-ghost{background:#1a0a2e;border:2px solid #5a2d9040;color:#a78bca;}
+.tag{display:inline-block;font-size:0.6rem;font-weight:800;border-radius:6px;padding:2px 7px;text-transform:uppercase;letter-spacing:1px;}
+.tag-crew{background:#4d96ff20;color:#4d96ff;}
+.tag-imp{background:#ff6b6b20;color:#ff6b6b;}
+input{background:#0d0517;border:2px solid #5a2d9060;border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;padding:10px 14px;outline:none;width:100%;}
+
+/* ZONES */
+.zone-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.zone-card{background:#1a0a2e;border:2px solid #5a2d9030;border-radius:14px;padding:12px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.zone-card:active{background:#2d1457;}
+.zone-card.has-task{border-color:#ffd93d60;animation:pulse 1.5s ease infinite;}
+.zone-card.has-sabotage{border-color:#ff6b6b80;animation:pulse 1.5s ease infinite;}
+.zone-card.completed{border-color:#6bcb7740;opacity:0.6;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 6px #ffd93d15}}
+.zone-icon{font-size:2rem;margin-bottom:4px;}
+.zone-name{font-family:'Fredoka One',cursive;font-size:0.8rem;color:#fff;}
+.zone-status{font-size:0.6rem;color:#a78bca;margin-top:2px;}
+
+/* TASK PANEL */
+.task-panel{background:#1a0a2e;border-radius:16px;border:2px solid #ffd93d40;padding:14px;}
+.task-title{font-family:'Fredoka One',cursive;font-size:1rem;color:#ffd93d;margin-bottom:8px;}
+.task-desc{font-size:0.78rem;color:#a78bca;margin-bottom:12px;line-height:1.4;}
+.task-progress{background:#0d0517;border-radius:8px;height:10px;overflow:hidden;margin-bottom:12px;}
+.task-progress-fill{height:100%;background:linear-gradient(90deg,#6bcb77,#4d96ff);border-radius:8px;transition:width .3s;}
+
+/* PLAYER LIST */
+.player-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #ffffff08;}
+.player-row:last-child{border-bottom:none;}
+.player-dot{width:10px;height:10px;border-radius:50%;}
+.player-name{font-weight:800;font-size:0.8rem;flex:1;}
+.player-status{font-size:0.65rem;color:#a78bca;}
+
+/* VOTE PANEL */
+.vote-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.vote-card{background:#1a0a2e;border:2px solid #5a2d9030;border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:border-color .2s;}
+.vote-card:active{background:#2d1457;}
+.vote-card.voted{border-color:#ff6b6b60;background:#ff6b6b10;}
+.vote-card.skip{border-color:#a78bca40;}
+
+/* HUD */
+.hud{position:fixed;top:0;left:0;right:0;background:#08021acc;backdrop-filter:blur(8px);border-bottom:2px solid #5a2d9030;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;z-index:50;}
+.hud-tasks{font-family:'Fredoka One',cursive;color:#6bcb77;font-size:0.8rem;}
+.hud-time{font-family:'Fredoka One',cursive;color:#ffd93d;font-size:0.8rem;}
+.hud-role{font-family:'Fredoka One',cursive;font-size:0.7rem;}
+
+/* MEETING OVERLAY */
+.meeting-overlay{position:fixed;inset:0;background:#000000ee;z-index:200;display:flex;flex-direction:column;align-items:center;padding:20px;overflow-y:auto;}
+.meeting-title{font-family:'Fredoka One',cursive;font-size:1.5rem;color:#ff6b6b;text-align:center;margin:20px 0 6px;}
+.meeting-sub{font-size:0.75rem;color:#a78bca;text-align:center;margin-bottom:16px;}
+
+/* SABOTAGE PANEL */
+.sab-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sab-btn{background:#ff6b6b15;border:2px solid #ff6b6b40;border-radius:12px;padding:10px;text-align:center;cursor:pointer;font-family:'Fredoka One',cursive;font-size:0.75rem;color:#ff6b6b;transition:background .2s;}
+.sab-btn:active{background:#ff6b6b30;}
+.sab-btn.on-cooldown{opacity:0.4;cursor:not-allowed;}
+
+/* TOAST */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#2d1457;border:2px solid #ffd93d40;border-radius:14px;padding:10px 18px;z-index:300;text-align:center;font-family:'Fredoka One',cursive;font-size:0.85rem;color:#ffd93d;white-space:nowrap;animation:toastIn .3s ease;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen" style="padding-top:60px;">
+  <h1>🔐 Haven Imposter</h1>
+  <p style="color:var(--mut);font-size:0.8rem;text-align:center;">Among Us — Haven Security Edition</p>
+  <div class="card">
+    <p style="color:#a78bca;font-size:0.75rem;margin-bottom:10px;text-align:center;">Your name</p>
+    <input id="nameInput" type="text" placeholder="Enter your name..." maxlength="20" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')loginUser()"/>
+    <button class="btn btn-primary" onclick="loginUser()">Continue 🔐</button>
+  </div>
+  <a href="index.html" style="color:#a78bca;font-size:0.75rem;">← Back to main game</a>
+</div>
+
+<!-- LOBBY -->
+<div id="lobbyScreen" class="screen" style="display:none;padding-top:20px;">
+  <h1>👥 Haven Imposter</h1>
+  <div class="card" id="lobbyJoin">
+    <button class="btn btn-primary" onclick="createRoom()" style="margin-bottom:10px;">🏠 Create Room</button>
+    <p style="color:#a78bca;font-size:0.7rem;text-align:center;margin-bottom:10px;">— or join with a code —</p>
+    <input id="codeInput" type="text" placeholder="ROOM CODE" maxlength="4" style="text-align:center;letter-spacing:6px;font-size:1.3rem;margin-bottom:8px;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"/>
+    <button class="btn btn-ghost" onclick="joinRoom()">🔗 Join Room</button>
+    <p id="joinError" style="color:#ff6b6b;font-size:0.7rem;text-align:center;margin-top:6px;display:none;">Room not found or already started!</p>
+  </div>
+</div>
+
+<!-- WAITING ROOM -->
+<div id="waitingScreen" class="screen" style="display:none;padding-top:20px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <h1 style="font-size:1.3rem;">Room: <span id="roomCodeDisplay" style="letter-spacing:4px;color:#4d96ff;">----</span></h1>
+  </div>
+  <p style="color:#a78bca;font-size:0.7rem;">Share this code with your crew!</p>
+  <div class="card">
+    <p style="font-family:'Fredoka One',cursive;color:#a78bca;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Pick your character:</p>
+    <div id="charPickGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;"></div>
+    <p style="font-family:'Fredoka One',cursive;color:#a78bca;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Players (<span id="playerCount">0</span>):</p>
+    <div id="waitingPlayerList" style="margin-bottom:12px;"></div>
+    <button id="startBtn" class="btn btn-green" onclick="startGame()" style="display:none;">🚀 Start Game!</button>
+    <p id="waitingMsg" style="text-align:center;color:#a78bca;font-size:0.75rem;">Waiting for host to start...</p>
+  </div>
+  <button class="btn btn-ghost" onclick="leaveRoom()" style="width:auto;padding:8px 20px;">← Leave</button>
+</div>
+
+<!-- ROLE REVEAL -->
+<div id="roleScreen" class="screen" style="display:none;padding-top:60px;">
+  <div class="card" style="text-align:center;" id="roleCard">
+    <div id="roleIcon" style="font-size:4rem;margin-bottom:10px;">👮</div>
+    <div id="roleTitle" style="font-family:'Fredoka One',cursive;font-size:1.5rem;margin-bottom:6px;"></div>
+    <div id="roleDesc" style="font-size:0.8rem;color:#a78bca;line-height:1.5;margin-bottom:16px;"></div>
+    <button class="btn btn-primary" onclick="enterGame()">I'm Ready 👊</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen" style="display:none;width:100%;max-width:420px;padding-top:60px;padding-bottom:80px;">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-tasks">✅ <span id="hudTasks">0/7</span></div>
+    <div class="hud-time" id="hudTime">5:00</div>
+    <div class="hud-role" id="hudRole"></div>
+  </div>
+
+  <!-- MAP -->
+  <div id="mapView">
+    <p style="font-family:'Fredoka One',cursive;color:#a78bca;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding:0 4px;">Haven Holiday Park — Where are you?</p>
+    <div class="zone-grid" id="zoneGrid"></div>
+    <div style="margin-top:10px;padding:0 4px;">
+      <button id="meetingBtn" class="btn btn-danger" onclick="callMeeting()" style="margin-bottom:8px;">🚨 Emergency Meeting!</button>
+      <div id="imposterPanel" style="display:none;">
+        <p style="font-family:'Fredoka One',cursive;color:#ff6b6b;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">😈 Sabotage:</p>
+        <div class="sab-grid" id="sabGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASK VIEW -->
+  <div id="taskView" style="display:none;padding:0 4px;">
+    <button class="btn btn-ghost" onclick="exitTask()" style="width:auto;padding:6px 14px;font-size:0.8rem;margin-bottom:10px;">← Back to Map</button>
+    <div class="task-panel" id="taskPanel"></div>
+  </div>
+</div>
+
+<!-- MEETING OVERLAY -->
+<div id="meetingOverlay" style="display:none;" class="meeting-overlay">
+  <div style="font-size:3rem;margin-top:10px;">🚨</div>
+  <div class="meeting-title">EMERGENCY MEETING!</div>
+  <div class="meeting-sub" id="meetingCaller"></div>
+  <div style="width:100%;max-width:420px;">
+    <div class="vote-grid" id="voteGrid"></div>
+    <button class="vote-card skip" onclick="castVote('skip')" style="width:100%;margin-top:8px;background:#1a0a2e;border:2px solid #a78bca40;border-radius:12px;padding:10px;cursor:pointer;font-family:'Fredoka One',cursive;color:#a78bca;">⏭️ Skip Vote</button>
+  </div>
+  <div id="voteResults" style="display:none;width:100%;max-width:420px;margin-top:12px;"></div>
+  <div id="voteTimer" style="font-family:'Fredoka One',cursive;color:#ffd93d;font-size:1.2rem;margin-top:10px;"></div>
+</div>
+
+<!-- WIN/LOSE OVERLAY -->
+<div id="endOverlay" style="display:none;position:fixed;inset:0;background:#000000ee;z-index:400;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;">
+  <div id="endIcon" style="font-size:4rem;margin-bottom:10px;"></div>
+  <div id="endTitle" style="font-family:'Fredoka One',cursive;font-size:1.8rem;margin-bottom:8px;"></div>
+  <div id="endMsg" style="font-size:0.85rem;color:#a78bca;margin-bottom:20px;line-height:1.5;"></div>
+  <a href="haven-among-us.html" class="btn btn-primary" style="text-decoration:none;display:block;max-width:300px;">Play Again 🔄</a>
+  <a href="index.html" style="color:#a78bca;font-size:0.75rem;margin-top:12px;">← Back to main game</a>
+</div>
+
+<script>
+var SUPA_URL = 'https://rwlvpvmlydnphwyivjeo.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bHZwdm1seWRucGh3eWl2amVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzU2NTYsImV4cCI6MjA5NDg1MTY1Nn0.hIeREKT55uLzmw3_d7LURYJUYvRyhBv521OSAixlQkI';
+
+// ═══ GAME DATA ═══
+var ZONES = [
+  {id:'gate',      name:'Main Gate',       icon:'🚪', desc:'Front entrance — ID checks, taxi rank'},
+  {id:'stage',     name:'Entertainment',   icon:'🎭', desc:'Stage area — Kelvin\'s domain'},
+  {id:'pool',      name:'Pool Area',       icon:'🏊', desc:'Swimming pool and sun loungers'},
+  {id:'caravans',  name:'Caravan Park',    icon:'🏕️', desc:'Residential caravan area'},
+  {id:'staffroom', name:'Staff Room',      icon:'☕', desc:'Staff room and break area'},
+  {id:'taxirank',  name:'Taxi Rank',       icon:'🚕', desc:'Jamie\'s personal nightmare'},
+];
+
+var TASKS = [
+  {id:'firstaid',  zone:'pool',      icon:'🩺', name:'First Aid Response',    desc:'A guest at the pool has reported feeling unwell. Respond to the call and carry out a basic assessment.',  steps:['Radio control to confirm attendance','Approach casualty and introduce yourself','Carry out primary survey','Record findings and call for backup if needed'], reward:1},
+  {id:'missingkid',zone:'caravans',  icon:'👶', name:'Missing Child Report',   desc:'A parent has reported their child missing near the caravan park. Search the area systematically.', steps:['Get description from parent','Search zone A','Search zone B','Radio all units with description','Reunite child with parent'], reward:1},
+  {id:'radiocheck', zone:'staffroom',icon:'📻', name:'Radio Check',            desc:'Ian wants a full team radio check. Contact all units and confirm they are in position.', steps:['Call Methembe on channel 1','Call Kelvin — remind him to be at his POST','Call Dave (brace yourself)','Call Rob (wait for the single word)','Confirm all units to Ian'], reward:1},
+  {id:'welfare',   zone:'staffroom', icon:'🚨', name:'Staff Welfare Checks',   desc:'Management has requested welfare checks on all security staff. Visit each post and check in.', steps:['Check Main Gate','Check Entertainment Stage','Check Pool Area','Check Caravan Park','Submit welfare report'], reward:1},
+  {id:'taxis',     zone:'gate',      icon:'🚕', name:'Clear the Taxi Rank',    desc:'The taxi situation has escalated. Clear the rank before Jamie loses his mind completely.', steps:['Wave on taxi 1','Wave on taxi 2','Wave on taxi 3 (same one came back)','Speak firmly to driver who parked on the line','Report clear to control'], reward:1},
+  {id:'idcheck',   zone:'gate',      icon:'🪪', name:'ID Checks at the Gate',  desc:'Carry out age verification on guests entering the venue. Ian is watching.', steps:['Check guest 1','Check guest 2','Check guest 3','Check guest 4 — seems young','Check guest 5 — definitely too young, turn them away'], reward:1},
+  {id:'incident',  zone:'staffroom', icon:'📋', name:'Incident Report',        desc:'Complete a written incident report for an earlier altercation near the entertainment stage.', steps:['Gather witness statements','Get CCTV times from control','Write up report','Get supervisor signature','File correctly (not where Jack would file it)'], reward:1},
+];
+
+var SABOTAGES = [
+  {id:'falsemissing', icon:'👶', name:'Fake Missing Child', desc:'Report a fake missing child in the wrong zone — sends crew scrambling', cooldown:45},
+  {id:'radiokill',    icon:'📻', name:'Kill the Radio',     desc:'Disable comms for 30 seconds — nobody can coordinate', cooldown:60},
+  {id:'lockgate',     icon:'🔒', name:'Lock the Gate',      desc:'Lock the main gate — crew can\'t complete gate tasks for 30 seconds', cooldown:50},
+  {id:'fakemedical',  icon:'🩺', name:'Fake Medical',       desc:'Trigger a fake first aid call sending crew to the wrong zone', cooldown:45},
+  {id:'taxisurge',    icon:'🚕', name:'Taxi Surge',         desc:'Call 6 taxis to the rank simultaneously — chaos ensues', cooldown:40},
+];
+
+var IMPOSTER_CHARS = ['methembe','kelvin','johno','mark','alysia','rob','sammie','brandon','ian','jamie','jack','kelly'];
+
+// ═══ GAME STATE ═══
+var myName = '';
+var myChar = '';
+var myRole = ''; // 'crew' or 'imposter'
+var roomId = '';
+var isHost = false;
+var players = [];
+var takenChars = [];
+var myPlayerId = null;
+var pollInterval = null;
+var gameTimer = 300; // 5 minutes
+var timerInterval = null;
+var completedTasks = [];
+var activeSabotage = null;
+var sabCooldowns = {};
+var currentTask = null;
+var taskStep = 0;
+var votes = {};
+var myVote = null;
+var inMeeting = false;
+var gameOver = false;
+var meetingTimeout = null;
+
+// ═══ AUDIO ═══
+var audioCtx = null;
+function getAudio(){ if(!audioCtx) try{audioCtx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){} return audioCtx; }
+function beep(freq,dur,vol,type){
+  var ctx=getAudio(); if(!ctx) return;
+  try{
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type=type||'sine';o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||0.1,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    o.start();o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+function sfxTask(){ beep(660,0.1,0.12); setTimeout(function(){beep(880,0.15,0.12)},100); }
+function sfxSabotage(){ beep(200,0.3,0.15,'sawtooth'); setTimeout(function(){beep(150,0.3,0.15,'sawtooth')},350); }
+function sfxMeeting(){ beep(440,0.15,0.15,'square'); setTimeout(function(){beep(380,0.15,0.15,'square')},200); setTimeout(function(){beep(440,0.15,0.15,'square')},400); }
+function sfxWin(){ beep(523,0.1,0.15); setTimeout(function(){beep(659,0.1,0.15)},120); setTimeout(function(){beep(784,0.1,0.15)},240); setTimeout(function(){beep(1047,0.2,0.15)},360); }
+function sfxLose(){ beep(440,0.2,0.15); setTimeout(function(){beep(349,0.2,0.15)},250); setTimeout(function(){beep(262,0.3,0.15)},500); }
+
+// ═══ SUPABASE HELPERS ═══
+async function sbGet(table, query){
+  var res = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+query, {
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  });
+  return res.json();
+}
+async function sbPost(table, data){
+  var res = await fetch(SUPA_URL+'/rest/v1/'+table, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'},
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
+async function sbPatch(table, query, data){
+  await fetch(SUPA_URL+'/rest/v1/'+table+'?'+query, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY},
+    body: JSON.stringify(data)
+  });
+}
+
+// ═══ UTILITIES ═══
+function show(id){ document.getElementById(id).style.display='flex'; }
+function hide(id){ document.getElementById(id).style.display='none'; }
+function cap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):''; }
+function genCode(){
+  var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:4},function(){return c[Math.floor(Math.random()*c.length)]}).join('');
+}
+function toast(msg, dur){
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, dur||2500);
+}
+
+// ═══ LOGIN ═══
+function loginUser(){
+  var name = document.getElementById('nameInput').value.trim();
+  if(!name) return;
+  myName = name;
+  hide('loginScreen');
+  show('lobbyScreen');
+}
+
+// ═══ ROOM MANAGEMENT ═══
+async function createRoom(){
+  var code = genCode();
+  await sbPost('rooms', {id:code, host_name:myName, status:'waiting'});
+  roomId = code;
+  isHost = true;
+  showWaiting();
+}
+
+async function joinRoom(){
+  var code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if(code.length!==4) return;
+  var rooms = await sbGet('rooms','id=eq.'+code);
+  if(!rooms.length || rooms[0].status!=='waiting'){
+    document.getElementById('joinError').style.display='block'; return;
+  }
+  roomId = code;
+  isHost = false;
+  showWaiting();
+}
+
+async function showWaiting(){
+  hide('lobbyScreen');
+  show('waitingScreen');
+  document.getElementById('roomCodeDisplay').textContent = roomId;
+  document.getElementById('startBtn').style.display = isHost ? 'block' : 'none';
+  document.getElementById('waitingMsg').style.display = isHost ? 'none' : 'block';
+  buildCharPicker();
+  startPolling();
+}
+
+function buildCharPicker(){
+  var allChars = ['methembe','kelvin','johno','mark','alysia','dave','rob','simon','sammie','brandon','ian','jamie','jack'];
+  var colors = {methembe:'#6366f1',kelvin:'#f97316',johno:'#374151',mark:'#6b7280',alysia:'#3b82f6',dave:'#ef4444',rob:'#94a3b8',simon:'#ffd93d',sammie:'#f472b6',brandon:'#22c55e',ian:'#60a5fa',jamie:'#f97316',jack:'#a78bca'};
+  var html = '';
+  allChars.forEach(function(id){
+    var taken = takenChars.indexOf(id)>-1 && id!==myChar;
+    var mine = id===myChar;
+    html += '<div onclick="pickChar(\''+id+'\')" style="cursor:'+(taken?'not-allowed':'pointer')+';background:'+(mine?colors[id]+'30':'#0d0517')+';border:2px solid '+(mine?colors[id]:taken?'#ff6b6b20':'#ffffff10')+';border-radius:10px;padding:6px 4px;text-align:center;opacity:'+(taken?'0.35':'1')+';transition:all .2s;">'
+          + '<div style="font-size:1.2rem;">'+ charEmoji(id) +'</div>'
+          + '<div style="font-size:0.5rem;color:#fff;font-weight:800;margin-top:2px;">'+cap(id)+'</div>'
+          + '</div>';
+  });
+  document.getElementById('charPickGrid').innerHTML = html;
+}
+
+function charEmoji(id){
+  var map={methembe:'😢',kelvin:'🍄',johno:'💀',mark:'👴',alysia:'🍗',dave:'😤',rob:'🤫',simon:'😈',sammie:'😤',brandon:'🟢',ian:'🦺',jamie:'🚕',jack:'📻',kelly:'🍷'};
+  return map[id]||'👤';
+}
+
+async function pickChar(charId){
+  if(takenChars.indexOf(charId)>-1 && charId!==myChar) return;
+  myChar = charId;
+  // Upsert player
+  var existing = await sbGet('room_players','room_id=eq.'+roomId+'&player_name=eq.'+encodeURIComponent(myName));
+  if(existing.length){
+    myPlayerId = existing[0].id;
+    await sbPatch('room_players','id=eq.'+myPlayerId,{character_name:charId});
+  } else {
+    var res = await sbPost('room_players',{room_id:roomId,player_name:myName,character_name:charId,mood:100,alive:true,score:0,role:'crew',completed_tasks:[],votes:{}});
+    if(res && res[0]) myPlayerId = res[0].id;
+  }
+  buildCharPicker();
+}
+
+function startPolling(){
+  clearInterval(pollInterval);
+  pollInterval = setInterval(poll, 2500);
+  poll();
+}
+
+async function poll(){
+  if(!roomId) return;
+  try {
+    var rooms = await sbGet('rooms','id=eq.'+roomId);
+    if(!rooms.length) return;
+    var room = rooms[0];
+
+    players = await sbGet('room_players','room_id=eq.'+roomId+'&order=joined_at.asc');
+    takenChars = players.map(function(p){return p.character_name;}).filter(Boolean);
+
+    // Update waiting room UI
+    if(document.getElementById('waitingScreen').style.display!=='none'){
+      buildCharPicker();
+      renderWaitingPlayers();
+      document.getElementById('playerCount').textContent = players.length;
+    }
+
+    // Game started
+    if(room.status==='playing' && document.getElementById('waitingScreen').style.display!=='none'){
+      var me = players.find(function(p){return p.player_name===myName;});
+      if(me){ myRole = me.role; showRoleReveal(); }
+    }
+
+    // In game — sync state
+    if(document.getElementById('gameScreen').style.display!=='none' && !gameOver){
+      syncGameState(room);
+    }
+
+    // Meeting called
+    if(room.meeting_caller && !inMeeting){
+      triggerMeeting(room.meeting_caller, room.meeting_data);
+    }
+
+    // Check votes resolved
+    if(inMeeting && room.vote_result){
+      resolveVotes(room.vote_result);
+    }
+
+  } catch(e){}
+}
+
+function renderWaitingPlayers(){
+  var html = '';
+  players.forEach(function(p){
+    var isMe = p.player_name===myName;
+    html += '<div class="player-row">'
+          + '<div class="player-dot" style="background:'+(p.character_name?'#6bcb77':'#a78bca')+'"></div>'
+          + '<div class="player-name" style="color:'+(isMe?'#ffd93d':'#fff')+'">'
+          + p.player_name+(isMe?' (you)':'')+'</div>'
+          + '<div class="player-status">'+(p.character_name?charEmoji(p.character_name)+' '+cap(p.character_name):'picking...')+'</div>'
+          + '</div>';
+  });
+  document.getElementById('waitingPlayerList').innerHTML = html||'<p style="color:#a78bca;font-size:0.75rem;text-align:center;">Nobody here yet...</p>';
+}
+
+// ═══ HOST: START GAME ═══
+async function startGame(){
+  if(!isHost||!myChar){toast('Pick a character first!');return;}
+  var allPicked = players.every(function(p){return p.character_name;});
+  if(!allPicked){toast('Everyone needs a character!');return;}
+  if(players.length<2){toast('Need at least 2 players!');return;}
+
+  // Assign roles — 1 imposter from eligible characters
+  var eligible = players.filter(function(p){return IMPOSTER_CHARS.indexOf(p.character_name)>-1;});
+  var imposterIdx = Math.floor(Math.random()*eligible.length);
+  var imposterPlayer = eligible[imposterIdx];
+
+  // Update roles in DB
+  for(var i=0;i<players.length;i++){
+    var role = players[i].id===imposterPlayer.id ? 'imposter' : 'crew';
+    await sbPatch('room_players','id=eq.'+players[i].id,{role:role});
+  }
+
+  // Set room to playing
+  await sbPatch('rooms','id=eq.'+roomId,{status:'playing',completed_tasks:[],sabotage:null,meeting_caller:null,vote_result:null});
+}
+
+// ═══ ROLE REVEAL ═══
+function showRoleReveal(){
+  clearInterval(pollInterval);
+  hide('waitingScreen');
+  show('roleScreen');
+  var card = document.getElementById('roleCard');
+  if(myRole==='imposter'){
+    document.getElementById('roleIcon').textContent='😈';
+    document.getElementById('roleTitle').innerHTML='<span style="color:#ff6b6b;">You are the IMPOSTER!</span>';
+    document.getElementById('roleDesc').textContent='Look like you\'re doing your job. Sabotage the crew\'s tasks. Don\'t get caught. Win by stopping all 7 tasks or getting crew to vote out the wrong person.';
+    card.style.borderColor='#ff6b6b60';
+  } else {
+    document.getElementById('roleIcon').textContent='👮';
+    document.getElementById('roleTitle').innerHTML='<span style="color:#6bcb77;">You are CREW!</span>';
+    document.getElementById('roleDesc').textContent='Complete all 7 security tasks before time runs out. Watch for suspicious behaviour. Call an emergency meeting if you spot the imposter!';
+    card.style.borderColor='#6bcb7760';
+  }
+}
+
+function enterGame(){
+  hide('roleScreen');
+  document.getElementById('gameScreen').style.display='block';
+  document.getElementById('hudRole').innerHTML = myRole==='imposter'
+    ? '<span style="color:#ff6b6b;">😈 Imposter</span>'
+    : '<span style="color:#6bcb77;">👮 Crew</span>';
+  if(myRole==='imposter'){
+    document.getElementById('imposterPanel').style.display='block';
+    buildSabotagePanel();
+  }
+  buildZoneGrid();
+  startGameTimer();
+  startPolling();
+}
+
+// ═══ GAME TIMER ═══
+function startGameTimer(){
+  clearInterval(timerInterval);
+  timerInterval = setInterval(function(){
+    gameTimer--;
+    var m=Math.floor(gameTimer/60);
+    var s=gameTimer%60;
+    document.getElementById('hudTime').textContent=m+':'+(s<10?'0':'')+s;
+    if(gameTimer<=30) document.getElementById('hudTime').style.color='#ff6b6b';
+    if(gameTimer<=0){ clearInterval(timerInterval); endGame('timeout'); }
+  },1000);
+}
+
+// ═══ ZONE GRID ═══
+function buildZoneGrid(){
+  var html='';
+  ZONES.forEach(function(z){
+    var hasTask = TASKS.some(function(t){return t.zone===z.id && completedTasks.indexOf(t.id)===-1;});
+    var done = TASKS.filter(function(t){return t.zone===z.id;}).every(function(t){return completedTasks.indexOf(t.id)>-1;});
+    var hasSab = activeSabotage && activeSabotage.zone===z.id;
+    html+='<div class="zone-card'+(done?' completed':hasSab?' has-sabotage':hasTask?' has-task':'')+'" onclick="enterZone(\''+z.id+'\')">'
+         +'<div class="zone-icon">'+z.icon+'</div>'
+         +'<div class="zone-name">'+z.name+'</div>'
+         +'<div class="zone-status">'+(done?'✅ Done':hasSab?'⚠️ Sabotaged':hasTask?'📋 Task here':'All clear')+'</div>'
+         +'</div>';
+  });
+  document.getElementById('zoneGrid').innerHTML=html;
+  document.getElementById('hudTasks').textContent=completedTasks.length+'/'+TASKS.length;
+}
+
+// ═══ ENTER ZONE ═══
+function enterZone(zoneId){
+  var zone = ZONES.find(function(z){return z.id===zoneId;});
+  var zoneTasks = TASKS.filter(function(t){return t.zone===zoneId && completedTasks.indexOf(t.id)===-1;});
+
+  if(myRole==='imposter'){
+    // Imposter can fake-do tasks or just move
+    if(zoneTasks.length>0){
+      showTask(zoneTasks[0], true);
+    } else {
+      toast('Nothing to sabotage here right now');
+    }
+    return;
+  }
+
+  if(zoneTasks.length===0){
+    toast('No tasks here! Move on.');
+    return;
+  }
+  showTask(zoneTasks[0], false);
+}
+
+// ═══ TASK DISPLAY ═══
+function showTask(task, faking){
+  currentTask = task;
+  taskStep = 0;
+  hide('mapView');
+  document.getElementById('taskView').style.display='block';
+  renderTask(faking);
+}
+
+function renderTask(faking){
+  var task = currentTask;
+  var pct = (taskStep/task.steps.length)*100;
+  var html='<div class="task-title">'+task.icon+' '+task.name+'</div>'
+          +'<div class="task-desc">'+task.desc+'</div>'
+          +'<div class="task-progress"><div class="task-progress-fill" style="width:'+pct+'%"></div></div>'
+          +'<div style="margin-bottom:12px;">';
+  task.steps.forEach(function(step,i){
+    var done=i<taskStep;
+    var active=i===taskStep;
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #ffffff08;opacity:'+(done?'0.5':active?'1':'0.4')+'">'
+         +'<span style="font-size:0.9rem;">'+(done?'✅':active?'▶️':'⬜')+'</span>'
+         +'<span style="font-size:0.75rem;color:'+(active?'#fff':'#a78bca')+'">' +step+'</span>'
+         +'</div>';
+  });
+  html+='</div>';
+  if(taskStep<task.steps.length){
+    html+='<button class="btn '+(faking?'btn-danger':'btn-primary')+'" onclick="doStep('+(faking?'true':'false')+')">'
+         +(faking?'😈 Pretend: ':'✅ Do: ')+task.steps[taskStep]+'</button>';
+  }
+  document.getElementById('taskPanel').innerHTML=html;
+}
+
+async function doStep(faking){
+  sfxTask();
+  taskStep++;
+  if(taskStep>=currentTask.steps.length){
+    if(!faking){
+      completedTasks.push(currentTask.id);
+      // Save to DB
+      await sbPatch('room_players','id=eq.'+myPlayerId,{completed_tasks:completedTasks});
+      // Update room completed tasks
+      var room = await sbGet('rooms','id=eq.'+roomId);
+      var roomTasks = (room[0].completed_tasks||[]);
+      if(roomTasks.indexOf(currentTask.id)===-1) roomTasks.push(currentTask.id);
+      await sbPatch('rooms','id=eq.'+roomId,{completed_tasks:roomTasks});
+      toast('Task complete! ✅ +1');
+      if(roomTasks.length>=TASKS.length){ endGame('crew_win'); return; }
+    } else {
+      toast('Nice fake 😈');
+    }
+    exitTask();
+  } else {
+    renderTask(faking);
+  }
+}
+
+function exitTask(){
+  currentTask=null; taskStep=0;
+  document.getElementById('taskView').style.display='none';
+  document.getElementById('mapView').style.display='block';
+  buildZoneGrid();
+}
+
+// ═══ SABOTAGE ═══
+function buildSabotagePanel(){
+  var html='<div class="sab-grid">';
+  SABOTAGES.forEach(function(s){
+    var cd = sabCooldowns[s.id]||0;
+    var onCd = cd>0;
+    html+='<div class="sab-btn'+(onCd?' on-cooldown':'')+'" onclick="'+(onCd?'':'doSabotage(\''+s.id+'\')')+'">'
+         +s.icon+'<br>'+s.name+(onCd?'<br><span style="font-size:0.55rem;">'+cd+'s</span>':'')
+         +'</div>';
+  });
+  html+='</div>';
+  document.getElementById('sabGrid').innerHTML=html;
+}
+
+async function doSabotage(sabId){
+  var sab = SABOTAGES.find(function(s){return s.id===sabId;});
+  if(!sab||sabCooldowns[sabId]>0) return;
+  sfxSabotage();
+  sabCooldowns[sabId]=sab.cooldown;
+  // Cooldown countdown
+  var cdTimer = setInterval(function(){
+    sabCooldowns[sabId]--;
+    if(sabCooldowns[sabId]<=0){ clearInterval(cdTimer); delete sabCooldowns[sabId]; }
+    buildSabotagePanel();
+  },1000);
+  // Apply sabotage
+  activeSabotage = {id:sabId, name:sab.name};
+  await sbPatch('rooms','id=eq.'+roomId,{sabotage:{id:sabId,name:sab.name,time:Date.now()}});
+  toast('😈 Sabotage deployed: '+sab.name);
+  // Auto-clear sabotage after 30s
+  setTimeout(async function(){
+    activeSabotage=null;
+    await sbPatch('rooms','id=eq.'+roomId,{sabotage:null});
+    buildZoneGrid();
+  },30000);
+  buildZoneGrid();
+}
+
+// ═══ EMERGENCY MEETING ═══
+async function callMeeting(){
+  if(inMeeting) return;
+  sfxMeeting();
+  await sbPatch('rooms','id=eq.'+roomId,{meeting_caller:myName,meeting_data:{caller:myName,time:Date.now()},vote_result:null});
+  toast('🚨 Emergency meeting called!');
+}
+
+function triggerMeeting(caller, data){
+  if(inMeeting) return;
+  inMeeting=true;
+  clearInterval(timerInterval);
+  sfxMeeting();
+  var overlay = document.getElementById('meetingOverlay');
+  overlay.style.display='flex';
+  document.getElementById('meetingCaller').textContent=caller+' called this meeting!';
+  buildVoteGrid();
+  // 30 second vote timer
+  var voteTime=30;
+  var voteEl=document.getElementById('voteTimer');
+  voteEl.textContent='Vote: '+voteTime+'s';
+  meetingTimeout=setInterval(function(){
+    voteTime--;
+    voteEl.textContent='Vote: '+voteTime+'s';
+    if(voteTime<=0){
+      clearInterval(meetingTimeout);
+      if(!myVote) castVote('skip');
+    }
+  },1000);
+}
+
+function buildVoteGrid(){
+  var alivePlayers=players.filter(function(p){return p.alive!==false && p.player_name!==myName;});
+  var html='';
+  alivePlayers.forEach(function(p){
+    html+='<div class="vote-card'+(myVote===p.player_name?' voted':'')+'" onclick="castVote(\''+p.player_name+'\')">'
+         +'<div style="font-size:1.5rem;">'+charEmoji(p.character_name||'')+'</div>'
+         +'<div style="font-family:\'Fredoka One\',cursive;font-size:0.75rem;margin-top:4px;">'+p.player_name+'</div>'
+         +'<div style="font-size:0.6rem;color:#a78bca;">'+cap(p.character_name||'')+'</div>'
+         +'</div>';
+  });
+  document.getElementById('voteGrid').innerHTML=html;
+}
+
+async function castVote(target){
+  if(myVote) return;
+  myVote=target;
+  votes[myName]=target;
+  await sbPatch('room_players','id=eq.'+myPlayerId,{vote:target});
+  buildVoteGrid();
+  toast('Vote cast for '+(target==='skip'?'Skip':target));
+  // Check if all voted
+  var allVoted=players.filter(function(p){return p.alive!==false;}).every(function(p){return p.vote;});
+  if(allVoted && isHost) resolveVotesHost();
+}
+
+async function resolveVotesHost(){
+  clearInterval(meetingTimeout);
+  // Count votes
+  var voteCounts={};
+  players.forEach(function(p){
+    if(p.vote&&p.vote!=='skip'){
+      voteCounts[p.vote]=(voteCounts[p.vote]||0)+1;
+    }
+  });
+  var maxVotes=0,ejected=null;
+  Object.entries(voteCounts).forEach(function(e){
+    if(e[1]>maxVotes){maxVotes=e[1];ejected=e[0];}
+  });
+  // Check for tie
+  var topVotes=Object.values(voteCounts).filter(function(v){return v===maxVotes;});
+  if(topVotes.length>1) ejected=null; // tie = skip
+
+  await sbPatch('rooms','id=eq.'+roomId,{vote_result:{ejected:ejected,votes:voteCounts},meeting_caller:null});
+  resolveVotes({ejected:ejected,votes:voteCounts});
+}
+
+async function resolveVotes(result){
+  clearInterval(meetingTimeout);
+  var overlay=document.getElementById('meetingOverlay');
+  var resultsEl=document.getElementById('voteResults');
+  resultsEl.style.display='block';
+
+  var html='<div class="card" style="margin-top:10px;">';
+  if(result.ejected){
+    var ejectedPlayer=players.find(function(p){return p.player_name===result.ejected;});
+    var wasImposter = ejectedPlayer && ejectedPlayer.role==='imposter';
+    html+='<div style="text-align:center;margin-bottom:10px;">'
+         +'<div style="font-size:2rem;">'+charEmoji(ejectedPlayer?ejectedPlayer.character_name:'')+'</div>'
+         +'<div style="font-family:\'Fredoka One\',cursive;color:#ff6b6b;font-size:1rem;">'+result.ejected+' was ejected!</div>'
+         +'<div style="font-size:0.75rem;color:#a78bca;margin-top:4px;">'+(wasImposter?'✅ They WERE the imposter!':'❌ They were NOT the imposter...')+'</div>'
+         +'</div>';
+    // Mark ejected player as dead
+    if(ejectedPlayer) await sbPatch('room_players','id=eq.'+ejectedPlayer.id,{alive:false});
+    // Check win condition
+    if(wasImposter){ setTimeout(function(){endGame('crew_win');},2500); }
+    else {
+      // Check if imposter now outnumbers crew
+      var aliveCrew=players.filter(function(p){return p.alive!==false&&p.role==='crew';});
+      var aliveImp=players.filter(function(p){return p.alive!==false&&p.role==='imposter';});
+      if(aliveImp.length>=aliveCrew.length) setTimeout(function(){endGame('imposter_win');},2500);
+    }
+  } else {
+    html+='<div style="text-align:center;color:#a78bca;font-family:\'Fredoka One\',cursive;">No majority — Skip!</div>';
+  }
+  html+='</div>';
+  resultsEl.innerHTML=html;
+
+  // Resume game after 4 seconds
+  setTimeout(function(){
+    inMeeting=false;
+    myVote=null;
+    players.forEach(function(p){p.vote=null;});
+    overlay.style.display='none';
+    resultsEl.style.display='none';
+    document.getElementById('voteTimer').textContent='';
+    startGameTimer();
+    buildZoneGrid();
+  },4000);
+}
+
+// ═══ SYNC GAME STATE ═══
+async function syncGameState(room){
+  // Update completed tasks from room
+  if(room.completed_tasks) completedTasks=room.completed_tasks;
+  if(room.sabotage) activeSabotage=room.sabotage; else activeSabotage=null;
+  document.getElementById('hudTasks').textContent=completedTasks.length+'/'+TASKS.length;
+  // Refresh zone grid if visible
+  if(document.getElementById('mapView').style.display!=='none') buildZoneGrid();
+  // Check win
+  if(completedTasks.length>=TASKS.length) endGame('crew_win');
+}
+
+// ═══ END GAME ═══
+function endGame(reason){
+  if(gameOver) return;
+  gameOver=true;
+  clearInterval(timerInterval);
+  clearInterval(pollInterval);
+  var endEl=document.getElementById('endOverlay');
+  endEl.style.display='flex';
+  if(reason==='crew_win'){
+    sfxWin();
+    document.getElementById('endIcon').textContent='🏆';
+    document.getElementById('endTitle').innerHTML='<span style="color:#6bcb77;">Crew Wins!</span>';
+    var imp=players.find(function(p){return p.role==='imposter';});
+    document.getElementById('endMsg').textContent='All 7 tasks completed! '+(imp?'The imposter was '+imp.player_name+' playing '+cap(imp.character_name)+'.':'The imposter was caught out.');
+    if(myRole==='crew') document.getElementById('endMsg').textContent+=' Well played! 🎉';
+  } else if(reason==='imposter_win'){
+    sfxLose();
+    document.getElementById('endIcon').textContent='😈';
+    document.getElementById('endTitle').innerHTML='<span style="color:#ff6b6b;">Imposter Wins!</span>';
+    document.getElementById('endMsg').textContent=myRole==='imposter'?'You got away with it! The crew never figured it out. 😂':'The imposter fooled everyone. Better luck next time!';
+  } else {
+    sfxLose();
+    document.getElementById('endIcon').textContent='⏰';
+    document.getElementById('endTitle').innerHTML='<span style="color:#ffd93d;">Time\'s Up!</span>';
+    document.getElementById('endMsg').textContent='The crew ran out of time! '+(myRole==='imposter'?'You win by default. 😈':'Get those tasks done faster next time!');
+  }
+  // Mark room as finished
+  sbPatch('rooms','id=eq.'+roomId,{status:'finished'});
+}
+
+async function leaveRoom(){
+  clearInterval(pollInterval);
+  if(myPlayerId) await sbPatch('room_players','id=eq.'+myPlayerId,{alive:false});
+  roomId=''; myChar=''; isHost=false; myPlayerId=null; players=[]; takenChars=[];
+  hide('waitingScreen');
+  show('lobbyScreen');
+}
+</script>
+</body>
+</html>
