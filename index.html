@@ -534,6 +534,7 @@ function loginPlayer(){
   playerName = name;
   loadCoinData();
   loadQuestData();
+  loadAchievements();
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('menuScreen').style.display = 'flex';
 }
@@ -2266,8 +2267,8 @@ var JMFRAMES = {
 //  equipment left everywhere
 // ═══════════════════════════════════════════════
 PAL['*'] = '#111111'; // Jack black hair
-PAL['B'] = '#f5d5b0'; // Jack skin — light/white
-PAL['b'] = '#e0b880'; // Jack skin shadow
+PAL[','] = '#f5d5b0'; // Jack skin — light/white
+PAL['.'] = '#e0b880'; // Jack skin shadow
 PAL['_'] = null;      // transparent (already set)
 
 var JKFRAMES = {
@@ -5659,17 +5660,23 @@ var achCounters = {deaths:0, chicken:0, taxis:0, equipment:0, edgeSeconds:0};
 
 function loadAchievements(){
   try {
-    var saved = localStorage.getItem('haven_achievements');
+    var key = 'haven_achievements_'+(playerName||'guest');
+    var saved = localStorage.getItem(key);
     if(saved) earnedAchs = JSON.parse(saved);
-    var counters = localStorage.getItem('haven_ach_counters');
+    else earnedAchs = {};
+    var ckey = 'haven_ach_counters_'+(playerName||'guest');
+    var counters = localStorage.getItem(ckey);
     if(counters) achCounters = JSON.parse(counters);
+    else achCounters = {deaths:0, chicken:0, taxis:0, equipment:0, edgeSeconds:0};
   } catch(e){}
 }
 
 function saveAchievements(){
   try {
-    localStorage.setItem('haven_achievements', JSON.stringify(earnedAchs));
-    localStorage.setItem('haven_ach_counters', JSON.stringify(achCounters));
+    var key = 'haven_achievements_'+(playerName||'guest');
+    localStorage.setItem(key, JSON.stringify(earnedAchs));
+    var ckey = 'haven_ach_counters_'+(playerName||'guest');
+    localStorage.setItem(ckey, JSON.stringify(achCounters));
   } catch(e){}
 }
 
