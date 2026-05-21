@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haven Security — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0d1a;--card:#1a1a2e;--card2:#16213e;--a1:#ffd93d;--a2:#4d96ff;--a3:#ff6b6b;--a4:#6bcb77;--txt:#fff;--mut:#8892b0;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;padding:16px;color:var(--txt);background-image:radial-gradient(circle at 20% 20%,#1a0a3e22,transparent 60%);}
+h1{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,5vw,2rem);color:var(--a1);text-align:center;margin-bottom:4px;}
+.sub{text-align:center;color:var(--mut);font-size:0.75rem;margin-bottom:20px;}
+.login-box{max-width:340px;margin:80px auto;background:var(--card);border-radius:20px;padding:28px 24px;border:2px solid #ffffff10;text-align:center;}
+.login-box h2{font-family:'Fredoka One',cursive;color:var(--a1);font-size:1.3rem;margin-bottom:16px;}
+.login-box input{width:100%;background:#0d0d1a;border:2px solid #ffffff20;border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-size:0.95rem;padding:10px 14px;outline:none;margin-bottom:10px;}
+.login-box button{background:linear-gradient(135deg,#7c3aed,#4d96ff);border:none;border-radius:10px;color:#fff;font-family:'Fredoka One',cursive;font-size:0.95rem;padding:10px 24px;cursor:pointer;width:100%;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px;margin:0 auto;}
+.card{background:var(--card);border-radius:16px;padding:16px;border:1px solid #ffffff0a;}
+.card-title{font-family:'Fredoka One',cursive;font-size:0.75rem;color:var(--mut);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #ffffff08;font-size:0.8rem;}
+.stat-row:last-child{border-bottom:none;}
+.stat-name{color:var(--txt);font-weight:700;}
+.stat-val{color:var(--a1);font-family:'Fredoka One',cursive;font-size:0.9rem;}
+.stat-val.red{color:var(--a3);}
+.stat-val.green{color:var(--a4);}
+.stat-val.blue{color:var(--a2);}
+.big-num{font-family:'Fredoka One',cursive;font-size:2rem;color:var(--a1);}
+.plays-table{width:100%;border-collapse:collapse;font-size:0.72rem;}
+.plays-table th{color:var(--mut);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid #ffffff15;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;}
+.plays-table td{padding:6px 8px;border-bottom:1px solid #ffffff08;}
+.plays-table tr:last-child td{border-bottom:none;}
+.plays-table tr:hover td{background:#ffffff05;}
+.died{color:var(--a3);font-weight:800;}
+.survived{color:var(--a4);font-weight:800;}
+.badge{display:inline-block;background:#ffd93d20;color:#ffd93d;font-size:0.6rem;font-weight:800;border-radius:5px;padding:2px 6px;}
+.badge.red{background:#ff6b6b20;color:#ff6b6b;}
+.badge.green{background:#6bcb7720;color:#6bcb77;}
+.refresh-btn{background:#1a1a2e;border:1px solid #ffffff20;border-radius:8px;color:var(--mut);font-family:'Fredoka One',cursive;font-size:0.75rem;padding:6px 14px;cursor:pointer;transition:color .2s,border-color .2s;}
+.refresh-btn:hover{color:#fff;border-color:#4d96ff;}
+.header-row{display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto 16px;}
+.tabs{display:flex;gap:6px;background:#1a1a2e;border-radius:10px;padding:4px;margin-bottom:16px;}
+.tab{flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:0.72rem;background:transparent;color:var(--mut);transition:background .2s,color .2s;max-width:140px;}
+.tab.active{background:var(--card2);color:#fff;}
+.shame-entry{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff08;font-size:0.78rem;}
+.shame-entry:last-child{border-bottom:none;}
+.shame-rank{font-family:'Fredoka One',cursive;color:var(--mut);min-width:20px;}
+.shame-name{font-weight:800;color:var(--txt);}
+.shame-count{font-family:'Fredoka One',cursive;color:var(--a3);margin-left:auto;}
+.loading{text-align:center;color:var(--mut);padding:40px;font-size:0.85rem;}
+</style>
+</head>
+<body>
+
+<div id="loginBox" class="login-box">
+  <h2>🔐 Admin Access</h2>
+  <p style="color:var(--mut);font-size:0.75rem;margin-bottom:16px;">Haven Security Dashboard</p>
+  <input type="password" id="adminPass" placeholder="Admin password..." onkeydown="if(event.key==='Enter')checkPass()"/>
+  <button onclick="checkPass()">Enter 🔐</button>
+  <p id="passErr" style="color:#ff6b6b;font-size:0.7rem;margin-top:8px;display:none;">Wrong password</p>
+</div>
+
+<div id="dashboard" style="display:none;">
+  <h1>🔐 Haven Security</h1>
+  <p class="sub">Admin Dashboard — What's the damage?</p>
+
+  <div class="header-row">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('overview')">📊 Overview</button>
+      <button class="tab" onclick="showTab('players')">👥 Players</button>
+      <button class="tab" onclick="showTab('shame')">💀 Hall of Shame</button>
+      <button class="tab" onclick="showTab('recent')">🕒 Recent</button>
+    </div>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div id="tab-overview" class="grid">
+    <div class="card">
+      <div class="card-title">📊 Total Plays</div>
+      <div class="big-num" id="totalPlays">—</div>
+      <div style="color:var(--mut);font-size:0.7rem;margin-top:4px;">across all players</div>
+    </div>
+    <div class="card">
+      <div class="card-title">💀 Total Deaths</div>
+      <div class="big-num" style="color:#ff6b6b" id="totalDeaths">—</div>
+      <div style="color:var(--mut);font-size:0.7rem;margin-top:4px;">characters abandoned</div>
+    </div>
+    <div class="card">
+      <div class="card-title">⭐ Highest Score Ever</div>
+      <div class="big-num" style="color:#6bcb77" id="highScore">—</div>
+      <div style="color:var(--mut);font-size:0.7rem;margin-top:4px;" id="highScoreBy">—</div>
+    </div>
+    <div class="card">
+      <div class="card-title">⏱️ Longest Survival</div>
+      <div class="big-num" style="color:#4d96ff" id="longestSurv">—</div>
+      <div style="color:var(--mut);font-size:0.7rem;margin-top:4px;" id="longestSurvBy">—</div>
+    </div>
+    <div class="card" style="grid-column:1/-1;">
+      <div class="card-title">🎮 Most Played Characters</div>
+      <div id="charStats"></div>
+    </div>
+    <div class="card" style="grid-column:1/-1;">
+      <div class="card-title">💀 Most Killed Characters</div>
+      <div id="killedStats"></div>
+    </div>
+  </div>
+
+  <!-- PLAYERS TAB -->
+  <div id="tab-players" style="display:none;max-width:1100px;margin:0 auto;">
+    <div class="card">
+      <div class="card-title">👥 Player Stats</div>
+      <div id="playerStats"></div>
+    </div>
+  </div>
+
+  <!-- HALL OF SHAME TAB -->
+  <div id="tab-shame" style="display:none;max-width:1100px;margin:0 auto;">
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">💀 Most Characters Killed</div>
+        <div id="shameList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏆 Most Characters Completed</div>
+        <div id="heroList"></div>
+      </div>
+      <div class="card" style="grid-column:1/-1;">
+        <div class="card-title">😭 Fastest Deaths (Under 60s)</div>
+        <div id="fastDeaths"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT TAB -->
+  <div id="tab-recent" style="display:none;max-width:1100px;margin:0 auto;">
+    <div class="card">
+      <div class="card-title">🕒 Recent Plays</div>
+      <div style="overflow-x:auto;">
+        <table class="plays-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Character</th>
+              <th>Survived</th>
+              <th>Score</th>
+              <th>Result</th>
+              <th>Cause</th>
+              <th>When</th>
+            </tr>
+          </thead>
+          <tbody id="recentTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPA_URL = 'https://rwlvpvmlydnphwyivjeo.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bHZwdm1seWRucGh3eWl2amVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzU2NTYsImV4cCI6MjA5NDg1MTY1Nn0.hIeREKT55uLzmw3_d7LURYJUYvRyhBv521OSAixlQkI';
+var ADMIN_PASS = 'havenpower2024'; // Change this to something only you know!
+
+function checkPass(){
+  var p = document.getElementById('adminPass').value;
+  if(p === ADMIN_PASS){
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('passErr').style.display = 'block';
+  }
+}
+
+function showTab(name){
+  ['overview','players','shame','recent'].forEach(function(t){
+    document.getElementById('tab-'+t).style.display = t===name ? (t==='overview'?'grid':'block') : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(function(b,i){
+    b.classList.toggle('active', ['overview','players','shame','recent'][i]===name);
+  });
+}
+
+function fmtTime(secs){
+  if(!secs) return '0:00';
+  return Math.floor(secs/60)+'m '+(secs%60)+'s';
+}
+
+function timeAgo(dateStr){
+  var d = new Date(dateStr);
+  var diff = Math.floor((Date.now()-d)/1000);
+  if(diff<60) return diff+'s ago';
+  if(diff<3600) return Math.floor(diff/60)+'m ago';
+  if(diff<86400) return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+
+var allPlays = [];
+
+async function loadData(){
+  try {
+    var res = await fetch(SUPA_URL+'/rest/v1/plays?select=*&order=played_at.desc&limit=500', {
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+    });
+    allPlays = await res.json();
+    renderAll();
+  } catch(e){
+    console.error(e);
+  }
+}
+
+function renderAll(){
+  renderOverview();
+  renderPlayers();
+  renderShame();
+  renderRecent();
+}
+
+function renderOverview(){
+  var plays = allPlays;
+  document.getElementById('totalPlays').textContent = plays.length;
+  var deaths = plays.filter(function(p){ return p.died; });
+  document.getElementById('totalDeaths').textContent = deaths.length;
+
+  // High score
+  var best = plays.reduce(function(a,b){ return (b.score||0)>(a.score||0)?b:a; }, {score:0});
+  document.getElementById('highScore').textContent = best.score ? best.score.toLocaleString() : '—';
+  document.getElementById('highScoreBy').textContent = best.player_name ? best.player_name+' playing '+best.character_name : '—';
+
+  // Longest survival
+  var longest = plays.reduce(function(a,b){ return (b.survived_seconds||0)>(a.survived_seconds||0)?b:a; }, {survived_seconds:0});
+  document.getElementById('longestSurv').textContent = longest.survived_seconds ? fmtTime(longest.survived_seconds) : '—';
+  document.getElementById('longestSurvBy').textContent = longest.player_name ? longest.player_name+' with '+longest.character_name : '—';
+
+  // Char play counts
+  var charCount = {};
+  plays.forEach(function(p){ charCount[p.character_name] = (charCount[p.character_name]||0)+1; });
+  var sorted = Object.entries(charCount).sort(function(a,b){ return b[1]-a[1]; });
+  var html = '';
+  sorted.slice(0,8).forEach(function(e){
+    var pct = Math.round(e[1]/plays.length*100);
+    html += '<div class="stat-row"><span class="stat-name">'+cap(e[0])+'</span><span class="stat-val">'+e[1]+' plays <span style="color:var(--mut);font-size:0.65rem;">('+pct+'%)</span></span></div>';
+  });
+  document.getElementById('charStats').innerHTML = html || '<div class="loading">No data yet</div>';
+
+  // Char kill counts
+  var killCount = {};
+  deaths.forEach(function(p){ killCount[p.character_name] = (killCount[p.character_name]||0)+1; });
+  var ksorted = Object.entries(killCount).sort(function(a,b){ return b[1]-a[1]; });
+  var khtml = '';
+  ksorted.slice(0,8).forEach(function(e){
+    khtml += '<div class="stat-row"><span class="stat-name">'+cap(e[0])+'</span><span class="stat-val red">'+e[1]+' deaths</span></div>';
+  });
+  document.getElementById('killedStats').innerHTML = khtml || '<div class="loading">No deaths recorded yet 🎉</div>';
+}
+
+function renderPlayers(){
+  var players = {};
+  allPlays.forEach(function(p){
+    if(!players[p.player_name]) players[p.player_name] = {plays:0,deaths:0,best:0,totalTime:0};
+    players[p.player_name].plays++;
+    if(p.died) players[p.player_name].deaths++;
+    if((p.score||0) > players[p.player_name].best) players[p.player_name].best = p.score||0;
+    players[p.player_name].totalTime += p.survived_seconds||0;
+  });
+  var sorted = Object.entries(players).sort(function(a,b){ return b[1].plays-a[1].plays; });
+  var html = '<table class="plays-table"><thead><tr><th>Player</th><th>Plays</th><th>Deaths</th><th>Death Rate</th><th>Best Score</th><th>Total Time</th></tr></thead><tbody>';
+  sorted.forEach(function(e){
+    var dr = Math.round(e[1].deaths/e[1].plays*100);
+    html += '<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1].plays+'</td><td class="died">'+e[1].deaths+'</td><td><span class="badge '+(dr>50?'red':'green')+'">'+dr+'%</span></td><td style="color:#ffd93d;font-weight:800;">'+e[1].best.toLocaleString()+'</td><td>'+fmtTime(e[1].totalTime)+'</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('playerStats').innerHTML = sorted.length ? html : '<div class="loading">No players yet</div>';
+}
+
+function renderShame(){
+  // Most kills
+  var kills = {};
+  allPlays.filter(function(p){ return p.died; }).forEach(function(p){ kills[p.player_name] = (kills[p.player_name]||0)+1; });
+  var ks = Object.entries(kills).sort(function(a,b){ return b[1]-a[1]; });
+  var shHtml = ks.length ? '' : '<div class="loading">Nobody has killed anyone yet 🎉</div>';
+  ks.slice(0,10).forEach(function(e,i){
+    shHtml += '<div class="shame-entry"><span class="shame-rank">'+(i+1)+'.</span><span class="shame-name">'+e[0]+'</span><span class="shame-count">💀 '+e[1]+'</span></div>';
+  });
+  document.getElementById('shameList').innerHTML = shHtml;
+
+  // Most completions (mood >= 80, not died)
+  var wins = {};
+  allPlays.filter(function(p){ return !p.died && p.cause_of_death==='Completed happy'; }).forEach(function(p){ wins[p.player_name]=(wins[p.player_name]||0)+1; });
+  var ws = Object.entries(wins).sort(function(a,b){ return b[1]-a[1]; });
+  var wHtml = ws.length ? '' : '<div class="loading">No completions yet</div>';
+  ws.slice(0,10).forEach(function(e,i){
+    wHtml += '<div class="shame-entry"><span class="shame-rank">'+(i+1)+'.</span><span class="shame-name">'+e[0]+'</span><span class="shame-count" style="color:#6bcb77;">🏆 '+e[1]+'</span></div>';
+  });
+  document.getElementById('heroList').innerHTML = wHtml;
+
+  // Fast deaths
+  var fast = allPlays.filter(function(p){ return p.died && (p.survived_seconds||0)<60; }).sort(function(a,b){ return (a.survived_seconds||0)-(b.survived_seconds||0); });
+  var fHtml = fast.length ? '<table class="plays-table"><thead><tr><th>Player</th><th>Character</th><th>Survived</th><th>Cause</th></tr></thead><tbody>' : '<div class="loading">No speed-runs yet</div>';
+  fast.slice(0,10).forEach(function(p){
+    fHtml += '<tr><td><strong>'+p.player_name+'</strong></td><td>'+cap(p.character_name)+'</td><td class="died">'+fmtTime(p.survived_seconds||0)+'</td><td style="color:var(--mut);font-size:0.65rem;">'+(p.cause_of_death||'—')+'</td></tr>';
+  });
+  if(fast.length) fHtml += '</tbody></table>';
+  document.getElementById('fastDeaths').innerHTML = fHtml;
+}
+
+function renderRecent(){
+  var html = '';
+  allPlays.slice(0,50).forEach(function(p){
+    var died = p.died;
+    html += '<tr>';
+    html += '<td><strong>'+p.player_name+'</strong></td>';
+    html += '<td>'+cap(p.character_name)+'</td>';
+    html += '<td>'+(p.survived_seconds ? fmtTime(p.survived_seconds) : '—')+'</td>';
+    html += '<td style="color:#ffd93d;font-weight:800;">'+(p.score||0).toLocaleString()+'</td>';
+    html += '<td><span class="'+(died?'died':'survived')+'">'+(died?'💀 Died':'✅ OK')+'</span></td>';
+    html += '<td style="color:var(--mut);font-size:0.65rem;">'+(p.cause_of_death||'—')+'</td>';
+    html += '<td style="color:var(--mut);">'+timeAgo(p.played_at)+'</td>';
+    html += '</tr>';
+  });
+  document.getElementById('recentTable').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:var(--mut);padding:20px;">No plays yet</td></tr>';
+}
+
+function cap(str){ return str ? str.charAt(0).toUpperCase()+str.slice(1) : '—'; }
+
+document.getElementById('adminPass').addEventListener('keydown', function(e){ if(e.key==='Enter') checkPass(); });
+</script>
+</body>
+</html>
